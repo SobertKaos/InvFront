@@ -60,11 +60,8 @@ def get_building_area(building_data):
 
 def get_u_values(data_folder = None,
                 file_names = ['UValuesFloor', 'UValuesRoof', 'UValuesWall', 'UValuesWindow'],
-                indices=[1,2,3,4,5,6,7,8,9],
                 filetype='csv'):
     """ Reads u values from multiple files and concatenates into a single pandas dataframe indexed with supplied index """
-
-    " Change this to return multiple dataframes/dicts or something, seems clunky to have a multiindexed dataframe for all U-values"
     u_values = dict()
     ageClasses = ['1','2','3','4','5','6','7','8','9']
     buildingTypes = ['BMFH', 'SFH', 'SMFH', 'AB']
@@ -112,23 +109,26 @@ def plot_buildings(buildings):
     plt.show()
     return None
 
+def main(load_buildings = False, plot_buildings = False):
+    u_values = get_u_values(data_folder='C:/Users/AlexanderKa/Desktop/Sinfonia Local/InvFront/BolzanoData')
+
+    if load_buildings:
+        buildings = load_data("BolzanoData/Building_0.csv".format(i)
+        for i in range(1,12):
+            temp = load_data("BolzanoData/Building_{}.csv".format(i))    
+            buildings = pd.concat([buildings, temp)
+
+    if plot_buildings:
+        plot_buildings(buildings)
+    
+    return None
+            
+
 if __name__ == "__main__":
-    get_u_values(data_folder='C:/Users/AlexanderKa/Desktop/Sinfonia Local/InvFront/BolzanoData')
-    buildings = load_data("BolzanoData/Building_0.csv")
-    pdb.set_trace()
+    main()
     window_ratio = {'SFH': 0.08,
                     'SMFH': 0.1,
                     'BMFH': 0.11,
                     'AB': 0.12
                     }
-
-    """
-    d = 12 # 12 if all files
-    for i in range(1, d):
-        path = "BolzanoData/Building_{}.csv".format(i)
-        print(path)
-        temp = load_data(path)
-        buildings = pd.concat([buildings, temp])
-    #pdb.set_trace()
-    plot_buildings(buildings)
-    """    
+   
