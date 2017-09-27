@@ -18,8 +18,8 @@ def load_data(dPath):
             except ValueError:
                 print('Skipping building {}'.format(row["BuildingId"]))
                 continue
-            if row["age_class"] == "-1":
-                print('Skipping building {} due unknown age class'.format(row['BuildingId']))
+            if row["AgeClass"] == "-1":
+                print('Skipping building {} due to invalid age class, unknown age class'.format(row['BuildingId']))
                 continue
             if row["Footprint"].startswith("[[["):
                 print('Skipping building {} due to invalid footprint, footprint is not a polygon'.format(row['BuildingId']))
@@ -52,6 +52,42 @@ def get_wall_length(building_footprint=None):
         length += partialLength
     return length
 
+def get_building_area(building_data):
+    building_type = building_data['TypeBuilding']
+    age_class = building_data['AgeClass']
+    wall_length = get_wall_length(building_data['Footprint'])
+    wall_area = wall_length * building_data['Height']
+
+def get_u_values(data_folder = None,
+                file_names = ['UValuesFloor', 'UValuesRoof', 'UValuesWall', 'UValuesWindow'],
+                indices=[1,2,3,4,5,6,7,8,9],
+                filetype='csv'):
+    """ Reads u values from multiple files and concatenates into a single pandas dataframe indexed with supplied index """
+
+    " Change this to return multiple dataframes/dicts or something, seems clunky to have a multiindexed dataframe for all U-values"
+    u_values = dict()
+    ageClasses = ['1','2','3','4','5','6','7','8','9']
+    buildingTypes = ['BMFH', 'SFH', 'SMFH', 'AB']
+    surfaces = ['Floor','Window','Wall','Roof']
+    surfaceDict = {'UValuesFloor' :'Floor', 'UValuesRoof': 'Roof', 'UValuesWall': 'Wall', 'UValuesWindow': 'Window'}
+
+    propertyDict = dict()
+    for ageClass in ageClasses:
+        propertyDict[ageClass] = dict()
+        for surface in surfaces:
+            propertyDict[ageClass][surface] = None
+
+    for buildingType in buildingTypes:
+        u_values[buildingType] = propertyDict.copy()
+
+    for fileName in file_names:
+        with open('{}/{}.{}'.format(data_folder, fileName, filetype)) as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                for buildingType in buildingTypes:
+                    u_values[buildingType][row['AgeClass']][surfaceDict[fileName]] = row[buildingType]
+    # Returns u_values with shape u_values['BuildingType']['AgeClass']['Surface']
+    return u_values
 
 def make_solution_span(floor, ceiling, slices):
     """Creates a list of tuples containing minimum and maximum values for each section
@@ -77,8 +113,9 @@ def plot_buildings(buildings):
     return None
 
 if __name__ == "__main__":
+    get_u_values(data_folder='C:/Users/AlexanderKa/Desktop/Sinfonia Local/InvFront/BolzanoData')
     buildings = load_data("BolzanoData/Building_0.csv")
-    
+    pdb.set_trace()
     window_ratio = {'SFH': 0.08,
                     'SMFH': 0.1,
                     'BMFH': 0.11,
